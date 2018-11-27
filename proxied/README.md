@@ -1,9 +1,13 @@
 Proxied Environment for EKS Cluster
 
-- Uses a Fargate Service running "Squid" to provide the web proxy
+* Uses a Fargate Service running "Squid" to provide the web proxy
 
-- External Requirements: Create a Docker Image for web proxy
--- This is specified in the Stack Parameters: ProxyServiceImage ProxyServiceImageTag
+* External Requirements: Create a Docker Image for web proxy
+    * This is specified in the Stack Parameters: ProxyServiceImage ProxyServiceImageTag
+
+
+
+
 
    {
         "ParameterKey": "ProxyServiceImage",
