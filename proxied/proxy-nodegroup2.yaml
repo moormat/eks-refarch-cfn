@@ -1,0 +1,268 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'EKS Proxied Node Group 2'
+
+Parameters:
+
+  KeyName:
+    Description: The EC2 Key Pair to allow SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+
+  NodeImageId:
+    Type: AWS::EC2::Image::Id
+    Description: AMI id for the node instances.
+
+  NodeInstanceType:
+    Description: EC2 instance type for the node instances
+    Type: String
+    Default: t2.medium
+    AllowedValues:
+    - c5d.xlarge
+    - t2.small
+    - t2.medium
+    - t2.large
+    - t2.xlarge
+    - t2.2xlarge
+    - m3.medium
+    - m3.large
+    - m3.xlarge
+    - m3.2xlarge
+    - m4.large
+    - m4.xlarge
+    - m4.2xlarge
+    - m4.4xlarge
+    - m4.10xlarge
+    - m5.large
+    - m5.xlarge
+    - m5.2xlarge
+    - m5.4xlarge
+    - m5.12xlarge
+    - m5.24xlarge
+    - c4.large
+    - c4.xlarge
+    - c4.2xlarge
+    - c4.4xlarge
+    - c4.8xlarge
+    - c5.large
+    - c5.xlarge
+    - c5.2xlarge
+    - c5.4xlarge
+    - c5.9xlarge
+    - c5.18xlarge
+    - i3.large
+    - i3.xlarge
+    - i3.2xlarge
+    - i3.4xlarge
+    - i3.8xlarge
+    - i3.16xlarge
+    - r3.xlarge
+    - r3.2xlarge
+    - r3.4xlarge
+    - r3.8xlarge
+    - r4.large
+    - r4.xlarge
+    - r4.2xlarge
+    - r4.4xlarge
+    - r4.8xlarge
+    - r4.16xlarge
+    - x1.16xlarge
+    - x1.32xlarge
+    - p2.xlarge
+    - p2.8xlarge
+    - p2.16xlarge
+    - p3.2xlarge
+    - p3.8xlarge
+    - p3.16xlarge
+    ConstraintDescription: Must be a valid EC2 instance type
+
+  NodeAutoScalingGroupMinSize:
+    Type: Number
+    Description: Minimum size of Node Group ASG.
+    Default: 1
+
+  NodeAutoScalingGroupMaxSize:
+    Type: Number
+    Description: Maximum size of Node Group ASG.
+    Default: 3
+
+  NodeVolumeSize:
+    Type: Number
+    Description: Node volume size
+    Default: 20
+
+  ClusterName:
+    Description: The cluster name provided when the cluster was created. If it is incorrect, nodes will not be able to join the cluster.
+    Type: String
+
+  BootstrapArguments:
+    Description: Arguments to pass to the bootstrap script. See files/bootstrap.sh in https://github.com/awslabs/amazon-eks-ami
+    Default: ""
+    Type: String
+
+  NodeGroupName:
+    Description: Unique identifier for the Node Group.
+    Type: String
+
+  ClusterControlPlaneSecurityGroup:
+    Description: The security group of the cluster control plane.
+    Type: AWS::EC2::SecurityGroup::Id
+
+  VpcId:
+    Description: The VPC of the worker instances
+    Type: AWS::EC2::VPC::Id
+
+  VpcCidr:
+    Description: CIDR Range of VPC  
+    Type: String  
+
+  ASGSubnets:
+    Description: The subnets where workers can be created.
+    Type: List<AWS::EC2::Subnet::Id>
+
+  NodeSecurityGroup:
+    Description: Worker Node Security Group 
+    Type: AWS::EC2::SecurityGroup::Id
+  
+  NodeInstanceProfile:
+    Description: Worker Node Instance Profile
+    Type: String
+
+  ServiceRegistry:
+    Description: Address of Proxy Service for Workers to use
+    Type: String
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "EKS Cluster"
+        Parameters:
+          - ClusterName
+          - ClusterControlPlaneSecurityGroup
+      -
+        Label:
+          default: "Worker Node Configuration"
+        Parameters:
+          - NodeGroupName
+          - NodeAutoScalingGroupMinSize
+          - NodeAutoScalingGroupMaxSize
+          - NodeInstanceType
+          - NodeImageId
+          - NodeVolumeSize
+          - KeyName
+          - BootstrapArguments
+      -
+        Label:
+          default: "Worker Network Configuration"
+        Parameters:
+          - VpcId
+          - ASGSubnets
+
+Resources:
+  NodeGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      DesiredCapacity: !Ref NodeAutoScalingGroupMaxSize
+      LaunchConfigurationName: !Ref NodeLaunchConfig
+      MinSize: !Ref NodeAutoScalingGroupMinSize
+      MaxSize: !Ref NodeAutoScalingGroupMaxSize
+      VPCZoneIdentifier:
+        !Ref ASGSubnets
+      Tags:
+      - Key: Name
+        Value: !Sub "${ClusterName}-${NodeGroupName}-Node"
+        PropagateAtLaunch: 'true'
+      - Key: !Sub 'kubernetes.io/cluster/${ClusterName}'
+        Value: 'owned'
+        PropagateAtLaunch: 'true'
+      - Key: !Sub 'k8s.io/cluster-autoscaler/enabled'
+        Value: 'true'
+        PropagateAtLaunch: 'true'
+      - Key: !Sub 'k8s.io/cluster-autoscaler/${ClusterName}'
+        Value: 'true'
+        PropagateAtLaunch: 'true'
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: '1'
+        MaxBatchSize: '1'
+
+  NodeLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      AssociatePublicIpAddress: 'true'
+      IamInstanceProfile: !Ref NodeInstanceProfile
+      ImageId: !Ref NodeImageId
+      InstanceType: !Ref NodeInstanceType
+      KeyName: !Ref KeyName
+      SecurityGroups:
+      - !Ref NodeSecurityGroup
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: !Ref NodeVolumeSize
+            VolumeType: gp2
+            DeleteOnTermination: true
+      UserData:
+        Fn::Base64:
+          !Sub |
+            Content-Type: multipart/mixed; boundary="==BOUNDARY=="
+            MIME-Version: 1.0
+            --==BOUNDARY==
+            Content-Type: text/cloud-boothook; charset="us-ascii"
+
+            cloud-init-per once proxy
+
+            # Set the proxy hostname and port
+            PROXY="${ServiceRegistry}:3128"
+
+            # Create the docker systemd directory
+            mkdir -p /etc/systemd/system/docker.service.d
+
+            # Configure yum to use the proxy
+            cat << EOF >> /etc/yum.conf
+            proxy=http://$PROXY
+            EOF
+
+            # Set the proxy for future processes, and use as an include file
+            cat << EOF >> /etc/environment
+            http_proxy=http://$PROXY
+            https_proxy=https://$PROXY
+            HTTP_PROXY=http://$PROXY
+            HTTPS_PROXY=https://$PROXY
+            no_proxy=${VpcCidr},localhost,127.0.0.1,169.254.169.254,.internal
+            NO_PROXY=${VpcCidr},localhost,127.0.0.1,169.254.169.254,.internal
+            EOF
+
+            # Configure docker with the proxy
+            cat << EOF >> /etc/systemd/system/docker.service.d/proxy.conf
+            [Service]
+            EnvironmentFile=/etc/environment
+            EOF
+
+            # Pick up the docker systemd directory
+            systemctl daemon-reload
+
+            # Configure the kubelet with the proxy
+            cat << EOF >> /etc/systemd/system/kubelet.service.d/proxy.conf
+            [Service]
+            EnvironmentFile=/etc/environment
+            EOF
+
+            --==BOUNDARY==
+            Content-Type: text/x-shellscript; charset="us-ascii"
+
+            #!/bin/bash
+            set -o xtrace
+
+            # Set the proxy variables before running the bootstrap.sh script
+            set -a
+            source /etc/environment
+
+            /etc/eks/bootstrap.sh ${ClusterName} ${BootstrapArguments}
+            /opt/aws/bin/cfn-signal --exit-code $? \
+                      --stack  ${AWS::StackName} \
+                      --resource NodeGroup  \
+                      --region ${AWS::Region}
+
+            --==BOUNDARY==--

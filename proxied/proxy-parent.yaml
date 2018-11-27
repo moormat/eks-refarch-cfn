@@ -1,0 +1,388 @@
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - 
+        Label:
+          default: "S3 Bucket for Nested Stack Templates"
+        Parameters:
+          - S3BucketName
+      - 
+        Label:
+          default: "VPC Nested Stack"
+        Parameters:
+          - VpcBlock
+          - Subnet01Block
+          - Subnet02Block
+          - Subnet03Block
+          - Subnet04Block
+          - Subnet05Block
+          - Subnet06Block
+      - 
+        Label:
+          default: "EKS Cluster Nested Stack"
+        Parameters:
+          - ServiceRole
+          - ClusterVersion
+          - ClusterName
+          - ClusterSubnets
+      - 
+        Label:
+          default: "Worker Node ASG Nested Stack 1"
+        Parameters:
+          - KeyName1
+          - NodeImageId1
+          - NodeInstanceType1
+          - NodeAutoScalingGroupMinSize1
+          - NodeAutoScalingGroupMaxSize1
+          - NodeVolumeSize1
+          - BootstrapArguments1
+          - NodeGroupName1
+      - 
+        Label:
+          default: "Worker Node ASG Nested Stack 2"
+        Parameters:
+          - KeyName2
+          - NodeImageId2
+          - NodeInstanceType2
+          - NodeAutoScalingGroupMinSize2
+          - NodeAutoScalingGroupMaxSize2
+          - NodeVolumeSize2
+          - BootstrapArguments2
+          - NodeGroupName2
+      - 
+        Label:
+          default: "Web Proxy Configuration"
+        Parameters:  
+          - ProxyServiceImage
+          - ProxyServiceImageTag
+          - ProxyServiceTaskExecutionRoleARN
+          - ProxyServiceDesiredTaskCount
+
+
+
+Parameters:
+
+  ProxyServiceImage:
+    Type: String
+    Description: URI of Container Image to use for Web Proxy
+    
+  ProxyServiceImageTag:
+    Type: String
+    Description: Tag of Container Image to use for Web Proxy
+
+  ProxyServiceTaskExecutionRoleARN:
+    Type: String
+    Description: ARN of ECS Task Execution Role
+
+  ProxyServiceDesiredTaskCount:
+    Type: Number
+    Description: Numer of Instantiations of Proxy Service
+    Default: 2
+
+  
+
+
+#S3 Bucket for storage of Nested Stacks
+  S3BucketName:
+    Type: String
+    Description: The name of the S3 Bucket where nested template files are stored
+
+#VPC Nested Stack Parameters
+  VpcBlock:
+    Type: String
+    Default: 192.168.0.0/16
+    Description: The CIDR range for the VPC. This should be a valid private (RFC 1918) CIDR range.
+
+  Subnet01Block:
+    Type: String
+    Default: 192.168.32.0/19
+    Description: CidrBlock for subnet 01 within the VPC (private)
+
+  Subnet02Block:
+    Type: String
+    Default: 192.168.64.0/19
+    Description: CidrBlock for subnet 02 within the VPC (private)
+
+  Subnet03Block:
+    Type: String
+    Default: 192.168.96.0/19
+    Description: CidrBlock for subnet 03 within the VPC (private)
+  
+  Subnet04Block:
+    Type: String
+    Default: 192.168.128.0/19
+    Description: CidrBlock for subnet 04 within the VPC (public)
+
+  Subnet05Block:
+    Type: String
+    Default: 192.168.160.0/19
+    Description: CidrBlock for subnet 05 within the VPC (public)
+
+  Subnet06Block:
+    Type: String
+    Default: 192.168.192.0/19
+    Description: CidrBlock for subnet 06 within the VPC (public)
+
+#EKS Cluster Nested Stack Parameters
+  ServiceRole:
+    Type: String
+    Description: 'Service Role Arn'
+
+  ClusterVersion:
+    Type: String
+    Description: 'Cluster Version'
+    Default: '1.10'
+
+  ClusterName:
+    Type: String
+    Description: 'Cluster Name'
+ 
+
+# Worker Node AutoScaling Group Nested Stack Parameters 1
+  KeyName1:
+    Description: The EC2 Key Pair to allow SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+
+  NodeImageId1:
+    Type: AWS::EC2::Image::Id
+    Description: AMI id for the node instances.
+
+  NodeInstanceType1:
+    Description: EC2 instance type for the node instances
+    Type: String
+    Default: t2.medium
+
+  NodeAutoScalingGroupMinSize1:
+    Type: Number
+    Description: Minimum size of Node Group ASG.
+    Default: 1
+
+  NodeAutoScalingGroupMaxSize1:
+    Type: Number
+    Description: Maximum size of Node Group ASG.
+    Default: 1
+
+  NodeVolumeSize1:
+    Type: Number
+    Description: Node volume size
+    Default: 40
+
+  BootstrapArguments1:
+    Description: Arguments to pass to the bootstrap script. See files/bootstrap.sh in https://github.com/awslabs/amazon-eks-ami
+    Default: ""
+    Type: String
+
+  NodeGroupName1:
+    Description: Unique identifier for the Node Group.
+    Type: String
+
+# Worker Node AutoScaling Group Nested Stack Parameters 2
+  KeyName2:
+    Description: The EC2 Key Pair to allow SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+
+  NodeImageId2:
+    Type: AWS::EC2::Image::Id
+    Description: AMI id for the node instances.
+
+  NodeInstanceType2:
+    Description: EC2 instance type for the node instances
+    Type: String
+    Default: t2.small
+
+  NodeAutoScalingGroupMinSize2:
+    Type: Number
+    Description: Minimum size of Node Group ASG.
+    Default: 1
+
+  NodeAutoScalingGroupMaxSize2:
+    Type: Number
+    Description: Maximum size of Node Group ASG.
+    Default: 3
+
+  NodeVolumeSize2:
+    Type: Number
+    Description: Node volume size
+    Default: 20
+
+  BootstrapArguments2:
+    Description: Arguments to pass to the bootstrap script. See files/bootstrap.sh in https://github.com/awslabs/amazon-eks-ami
+    Default: ""
+    Type: String
+
+  NodeGroupName2:
+    Description: Unique identifier for the Node Group.
+    Type: String
+  
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters: 
+          VpcBlock: !Ref VpcBlock
+          Subnet01Block: !Ref Subnet01Block
+          Subnet02Block: !Ref Subnet02Block
+          Subnet03Block: !Ref Subnet03Block
+          Subnet04Block: !Ref Subnet04Block
+          Subnet05Block: !Ref Subnet05Block
+          Subnet06Block: !Ref Subnet06Block
+      TemplateURL:  !Join
+        - ''
+        - - 'https://'
+          - !Ref S3BucketName
+          - '.s3.amazonaws.com/proxy-vpc.yaml'
+      TimeoutInMinutes: 30
+
+  ProxyServiceStack:
+    DependsOn: VPCStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        ProxyImage: !Ref ProxyServiceImage
+        ProxyImageTag: !Ref ProxyServiceImageTag
+        ProxyTaskExecutionRoleARN: !Ref ProxyServiceTaskExecutionRoleARN
+        ECSServiceDesiredTaskCount: !Ref ProxyServiceDesiredTaskCount
+        PublicSubnets: !GetAtt VPCStack.Outputs.PublicSubnetIds
+        VPCID: !GetAtt VPCStack.Outputs.VpcId
+        VpcCidr: !GetAtt VPCStack.Outputs.VpcCidr
+      TemplateURL:  !Join
+        - ''
+        - - 'https://'
+          - !Ref S3BucketName
+          - '.s3.amazonaws.com/proxy-proxyservice.yaml'
+      TimeoutInMinutes: 30
+
+  ClusterSGStack:
+    DependsOn: ProxyServiceStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters: 
+          VpcId: !GetAtt VPCStack.Outputs.VpcId
+      TemplateURL:  !Join
+        - ''
+        - - 'https://'
+          - !Ref S3BucketName
+          - '.s3.amazonaws.com/proxy-controlplanesecuritygroup.yaml'
+      TimeoutInMinutes: 30
+  
+  #EKS Cluster takes approximately 20 Minutes
+  EKSClusterStack:
+    DependsOn: ClusterSGStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters: 
+          ServiceRole: !Ref ServiceRole
+          ClusterVersion: !Ref ClusterVersion
+          #Output from EKSClusterStack
+          ClusterName: !Ref ClusterName
+          #Output from VPCStack
+          ControlPlaneSecurityGroups: !GetAtt ClusterSGStack.Outputs.SecurityGroups
+          ClusterSubnets: !GetAtt VPCStack.Outputs.SubnetIds
+      TemplateURL: !Join
+        - ''
+        - - 'https://'
+          - !Ref S3BucketName
+          - '.s3.amazonaws.com/proxy-ekscluster.yaml'
+      TimeoutInMinutes: 30
+
+  NodeInstanceProfileStack:
+    DependsOn: EKSClusterStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:  !Join
+        - ''
+        - - 'https://'
+          - !Ref S3BucketName
+          - '.s3.amazonaws.com/proxy-workernodeinstanceprofile.yaml'
+      TimeoutInMinutes: 30
+
+  NodeSecurityGroupStack:
+    DependsOn: NodeInstanceProfileStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        #Output from VPCStack
+        ControlPlaneSecurityGroup:  !GetAtt ClusterSGStack.Outputs.SecurityGroups
+        #Output from VPCStack
+        Vpc: !GetAtt VPCStack.Outputs.VpcId
+        #Output from EKSClusterStack
+        ClusterName: !GetAtt EKSClusterStack.Outputs.ClusterName
+      TemplateURL: !Join
+        - ''
+        - - 'https://'
+          - !Ref S3BucketName
+          - '.s3.amazonaws.com/proxy-workernodesecuritygroup.yaml'
+      TimeoutInMinutes: 30
+
+  NodeASGStack1:
+    DependsOn: NodeSecurityGroupStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters: 
+        KeyName: !Ref KeyName1
+        NodeImageId: !Ref NodeImageId1
+        NodeInstanceType: !Ref NodeInstanceType1
+        NodeAutoScalingGroupMinSize: !Ref NodeAutoScalingGroupMinSize1
+        NodeAutoScalingGroupMaxSize: !Ref NodeAutoScalingGroupMaxSize1
+        NodeVolumeSize: !Ref NodeVolumeSize1
+        BootstrapArguments: !Ref BootstrapArguments1
+        #Output from EKSClusterStack
+        ClusterName: !GetAtt EKSClusterStack.Outputs.ClusterName
+        NodeGroupName: !Ref NodeGroupName1
+        #Output from VPCStack
+        ClusterControlPlaneSecurityGroup: !GetAtt ClusterSGStack.Outputs.SecurityGroups
+        #Output from VPCStack
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        ASGSubnets: !GetAtt VPCStack.Outputs.PrivateSubnetIds
+        #Output from NodeSecurityGroupStack
+        NodeSecurityGroup: !GetAtt NodeSecurityGroupStack.Outputs.NodeSecurityGroup
+        #Output from NodeInstanceProfileStack
+        NodeInstanceProfile: !GetAtt NodeInstanceProfileStack.Outputs.NodeInstanceProfile
+        VpcCidr: !GetAtt VPCStack.Outputs.VpcCidr
+        ServiceRegistry: !GetAtt ProxyServiceStack.Outputs.ProxyServiceRegistry
+      TemplateURL:  !Join
+        - ''
+        - - 'https://'
+          - !Ref S3BucketName
+          - '.s3.amazonaws.com/proxy-nodegroup1.yaml'
+      TimeoutInMinutes: 30
+
+  NodeASGStack2:
+    DependsOn: NodeSecurityGroupStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters: 
+        KeyName: !Ref KeyName2
+        NodeImageId: !Ref NodeImageId2
+        NodeInstanceType: !Ref NodeInstanceType2
+        NodeAutoScalingGroupMinSize: !Ref NodeAutoScalingGroupMinSize2
+        NodeAutoScalingGroupMaxSize: !Ref NodeAutoScalingGroupMaxSize2
+        NodeVolumeSize: !Ref NodeVolumeSize2
+        BootstrapArguments: !Ref BootstrapArguments2
+        #Output from EKSClusterStack
+        ClusterName: !GetAtt EKSClusterStack.Outputs.ClusterName
+        NodeGroupName: !Ref NodeGroupName2
+        #Output from VPCStack
+        ClusterControlPlaneSecurityGroup: !GetAtt ClusterSGStack.Outputs.SecurityGroups
+        #Output from VPCStack
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        ASGSubnets: !GetAtt VPCStack.Outputs.PrivateSubnetIds
+        #Output from NodeSecurityGroupStack
+        NodeSecurityGroup: !GetAtt NodeSecurityGroupStack.Outputs.NodeSecurityGroup
+        #Output from NodeInstanceProfileStack
+        NodeInstanceProfile: !GetAtt NodeInstanceProfileStack.Outputs.NodeInstanceProfile
+        VpcCidr: !GetAtt VPCStack.Outputs.VpcCidr
+        ServiceRegistry: !GetAtt ProxyServiceStack.Outputs.ProxyServiceRegistry
+      TemplateURL:  !Join
+        - ''
+        - - 'https://'
+          - !Ref S3BucketName
+          - '.s3.amazonaws.com/proxy-nodegroup2.yaml'
+      TimeoutInMinutes: 30
+
+
+
+
+
+  

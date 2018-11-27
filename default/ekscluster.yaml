@@ -1,0 +1,40 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'EKS Cluster'
+
+Parameters:
+  ServiceRole:
+    Type: String
+    Description: 'Service Role Arn'
+
+  ClusterVersion:
+    Type: String
+    Description: 'Cluster Version'
+
+  ClusterName:
+    Type: String
+    Description: 'Cluster Name'
+  
+  ControlPlaneSecurityGroups:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: 'Security Group Id for Control Plane'
+
+  ClusterSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: 'Cluster Subnets'
+
+Resources:
+  EKSCluster:
+    Type: "AWS::EKS::Cluster"
+    Properties:
+      Name: !Ref ClusterName
+      ResourcesVpcConfig:
+        SecurityGroupIds: !Ref ControlPlaneSecurityGroups
+        SubnetIds: !Ref ClusterSubnets
+      RoleArn: !Ref ServiceRole
+      Version: !Ref ClusterVersion
+
+Outputs:
+  ClusterName:
+    Description: Name of the EKS Cluster
+    Value: !Ref EKSCluster       
