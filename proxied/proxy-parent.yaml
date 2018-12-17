@@ -169,7 +169,7 @@ Parameters:
 
   BootstrapArguments1:
     Description: Arguments to pass to the bootstrap script. See files/bootstrap.sh in https://github.com/awslabs/amazon-eks-ami
-    Default: ""
+    Default: "--kubelet-extra-args '--kube-reserved=cpu=100m,memory=100Mi,ephemeral-storage=1Gi --system-reserved=cpu=100m,memory=100Mi,ephemeral-storage=1Gi --v=4'"
     Type: String
 
   NodeGroupName1:
@@ -207,7 +207,7 @@ Parameters:
 
   BootstrapArguments2:
     Description: Arguments to pass to the bootstrap script. See files/bootstrap.sh in https://github.com/awslabs/amazon-eks-ami
-    Default: ""
+    Default: "--kubelet-extra-args '--kube-reserved=cpu=100m,memory=100Mi,ephemeral-storage=1Gi --system-reserved=cpu=100m,memory=100Mi,ephemeral-storage=1Gi --v=4'"
     Type: String
 
   NodeGroupName2:
