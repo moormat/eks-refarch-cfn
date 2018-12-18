@@ -227,9 +227,9 @@ Resources:
             # Set the proxy for future processes, and use as an include file
             cat << EOF >> /etc/environment
             http_proxy=http://$PROXY
-            https_proxy=https://$PROXY
+            https_proxy=http://$PROXY
             HTTP_PROXY=http://$PROXY
-            HTTPS_PROXY=https://$PROXY
+            HTTPS_PROXY=http://$PROXY
             no_proxy=${VpcCidr},localhost,127.0.0.1,169.254.169.254,.internal
             NO_PROXY=${VpcCidr},localhost,127.0.0.1,169.254.169.254,.internal
             EOF
