@@ -140,8 +140,10 @@ Resources:
         Ref: VPC
       Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-Subnet01"
+        Value: !Sub "${AWS::StackName}-PrivSub01"
       - Key: kubernetes.io/role/alb-ingress
+        Value: ''
+      - Key: kubernetes.io/role/internal-elb
         Value: ''
 
   Subnet02:
@@ -160,8 +162,10 @@ Resources:
         Ref: VPC
       Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-Subnet02"
+        Value: !Sub "${AWS::StackName}-PrivSub02"
       - Key: kubernetes.io/role/alb-ingress
+        Value: ''
+      - Key: kubernetes.io/role/internal-elb
         Value: ''
 
   Subnet03:
@@ -180,8 +184,10 @@ Resources:
         Ref: VPC
       Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-Subnet03"
+        Value: !Sub "${AWS::StackName}-PrivSub03"
       - Key: kubernetes.io/role/alb-ingress
+        Value: ''
+      - Key: kubernetes.io/role/internal-elb
         Value: ''
   
   Subnet04:
@@ -200,7 +206,7 @@ Resources:
         Ref: VPC
       Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-Subnet04"
+        Value: !Sub "${AWS::StackName}-PubSub04"
       - Key: kubernetes.io/role/alb-ingress
         Value: ''
 
@@ -220,7 +226,7 @@ Resources:
         Ref: VPC
       Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-Subnet05"
+        Value: !Sub "${AWS::StackName}-PubSub05"
       - Key: kubernetes.io/role/alb-ingress
         Value: ''
 
@@ -240,7 +246,7 @@ Resources:
         Ref: VPC
       Tags:
       - Key: Name
-        Value: !Sub "${AWS::StackName}-Subnet06"
+        Value: !Sub "${AWS::StackName}-PubSub06"
       - Key: kubernetes.io/role/alb-ingress
         Value: ''
 
