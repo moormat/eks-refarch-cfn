@@ -1,6 +1,6 @@
 ---
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'VPC with Private Subnets, Public Subnets, Internet Gateway, Fargate Service with Autonaming Service Discovery'
+Description: 'Squid Proxy for traffic from Worker Nodes'
 
 Parameters:
 
