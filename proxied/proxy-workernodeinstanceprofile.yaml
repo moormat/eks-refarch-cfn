@@ -28,6 +28,16 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
         - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Policies: 
+        - 
+          PolicyName: "kube2iamAssumeRolePolicy"
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement: 
+              - 
+                Effect: "Allow"
+                Action: "sts:AssumeRole"
+                Resource: "*"
 
 Outputs:
   NodeInstanceRole:
