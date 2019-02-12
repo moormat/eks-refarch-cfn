@@ -12,32 +12,32 @@ Parameters:
   Subnet01Block:
     Type: String
     Default: 192.168.32.0/19
-    Description: CidrBlock for subnet 01 within the VPC (private)
+    Description: CidrBlock for private Subnet 1
 
   Subnet02Block:
     Type: String
     Default: 192.168.64.0/19
-    Description: CidrBlock for subnet 02 within the VPC (private)
+    Description: CidrBlock for private Subnet 2
 
   Subnet03Block:
     Type: String
     Default: 192.168.96.0/19
-    Description: CidrBlock for subnet 03 within the VPC (private)
+    Description: CidrBlock for private Subnet 3 (when region has 3 AZs)
   
   Subnet04Block:
     Type: String
     Default: 192.168.128.0/19
-    Description: CidrBlock for subnet 04 within the VPC (public)
+    Description: CidrBlock for public Subnet 4
 
   Subnet05Block:
     Type: String
     Default: 192.168.160.0/19
-    Description: CidrBlock for subnet 05 within the VPC (public)
+    Description: CidrBlock for public Subnet 5
 
   Subnet06Block:
     Type: String
     Default: 192.168.192.0/19
-    Description: CidrBlock for subnet 06 within the VPC (public)
+    Description: CidrBlock for public Subnet 6 (when region has 3 AZs)
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -53,6 +53,26 @@ Metadata:
           - Subnet04Block
           - Subnet05Block
           - Subnet06Block
+
+Conditions:
+  Has2Azs:
+    Fn::Or:
+      - Fn::Equals:
+        - {Ref: 'AWS::Region'}
+        - ap-south-1
+      - Fn::Equals:
+        - {Ref: 'AWS::Region'}
+        - ap-northeast-2
+      - Fn::Equals:
+        - {Ref: 'AWS::Region'}
+        - ca-central-1
+      - Fn::Equals:
+        - {Ref: 'AWS::Region'}
+        - cn-north-1
+
+  HasMoreThan2Azs:
+    Fn::Not:
+      - Condition: Has2Azs
 
 Resources:
   VPC:
@@ -169,6 +189,7 @@ Resources:
         Value: ''
 
   Subnet03:
+    Condition: HasMoreThan2Azs
     Type: AWS::EC2::Subnet
     Metadata:
       Comment: Subnet 03
@@ -235,6 +256,7 @@ Resources:
         Value: ''
 
   Subnet06:
+    Condition: HasMoreThan2Azs
     Type: AWS::EC2::Subnet
     Metadata:
       Comment: Subnet 06
@@ -269,6 +291,7 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
 
   Subnet03RouteTableAssociation:
+    Condition: HasMoreThan2Azs
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref Subnet03
@@ -287,6 +310,7 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
 
   Subnet06RouteTableAssociation:
+    Condition: HasMoreThan2Azs
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref Subnet06
@@ -297,16 +321,28 @@ Outputs:
   SubnetIds:
     #EKS Places external load balancers in public subnets
     Description: All subnets in the VPC
-    Value: !Join [ ",", [ !Ref Subnet01, !Ref Subnet02, !Ref Subnet03, !Ref Subnet04, !Ref Subnet05, !Ref Subnet06] ]
+    Value:
+      Fn::If:
+      - HasMoreThan2Azs
+      - !Join [ ",", [ !Ref Subnet01, !Ref Subnet02, !Ref Subnet03, !Ref Subnet04, !Ref Subnet05, !Ref Subnet06] ]
+      - !Join [ ",", [ !Ref Subnet01, !Ref Subnet02, !Ref Subnet04, !Ref Subnet05] ]
 
   PublicSubnetIds:
     Description: Private Subnets in the VPC
-    Value: !Join [ ",", [ !Ref Subnet04, !Ref Subnet05, !Ref Subnet06] ]
+    Value:
+      Fn::If:
+      - HasMoreThan2Azs
+      - !Join [ ",", [ !Ref Subnet04, !Ref Subnet05, !Ref Subnet06 ] ]
+      - !Join [ ",", [ !Ref Subnet04, !Ref Subnet05 ] ]
 
   PrivateSubnetIds:
     #worker nodes run in private subnets
     Description: Private Subnets in the VPC
-    Value: !Join [ ",", [ !Ref Subnet01, !Ref Subnet02, !Ref Subnet03] ]
+    Value: 
+      Fn::If:
+      - HasMoreThan2Azs
+      - !Join [ ",", [ !Ref Subnet01, !Ref Subnet02, !Ref Subnet03 ] ]
+      - !Join [ ",", [ !Ref Subnet01, !Ref Subnet02 ] ]
 
   VpcCidr:
     Description: The VPC CIDR Block
