@@ -205,6 +205,19 @@ Resources:
           - '.s3.amazonaws.com/vpc.yaml'
       TimeoutInMinutes: 30
   
+  ClusterSGStack:
+    DependsOn: VPCStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters: 
+          VpcId: !GetAtt VPCStack.Outputs.VpcId
+      TemplateURL:  !Join
+        - ''
+        - - 'https://'
+          - !Ref S3BucketName
+          - '.s3.amazonaws.com/controlplanesecuritygroup.yaml'
+      TimeoutInMinutes: 30
+
   #EKS Cluster takes approximately 20 Minutes
   EKSClusterStack:
     DependsOn: VPCStack
@@ -215,8 +228,8 @@ Resources:
           ClusterVersion: !Ref ClusterVersion
           #Output from EKSClusterStack
           ClusterName: !Ref ClusterName
-          #Output from VPCStack
-          ControlPlaneSecurityGroups: !GetAtt VPCStack.Outputs.SecurityGroups
+          #Output from Cluster SG Stack
+          ControlPlaneSecurityGroups: !GetAtt ClusterSGStack.Outputs.SecurityGroups
           ClusterSubnets: !GetAtt VPCStack.Outputs.SubnetIds
       TemplateURL: !Join
         - ''
@@ -241,8 +254,8 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
-        #Output from VPCStack
-        ClusterControlPlaneSecurityGroup:  !GetAtt VPCStack.Outputs.SecurityGroups
+        #Output from Cluster SG Stack
+        ClusterControlPlaneSecurityGroup:  !GetAtt ClusterSGStack.Outputs.SecurityGroups
         #Output from VPCStack
         Vpc: !GetAtt VPCStack.Outputs.VpcId
         #Output from EKSClusterStack

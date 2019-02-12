@@ -276,7 +276,7 @@ Resources:
           ClusterVersion: !Ref ClusterVersion
           #Output from EKSClusterStack
           ClusterName: !Ref ClusterName
-          #Output from VPCStack
+          #Output from Cluster SG Stack
           ControlPlaneSecurityGroups: !GetAtt ClusterSGStack.Outputs.SecurityGroups
           ClusterSubnets: !GetAtt VPCStack.Outputs.SubnetIds
       TemplateURL: !Join
@@ -302,7 +302,7 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
-        #Output from VPCStack
+        #Output from Cluster SG Stack
         ClusterControlPlaneSecurityGroup:  !GetAtt ClusterSGStack.Outputs.SecurityGroups
         #Output from VPCStack
         Vpc: !GetAtt VPCStack.Outputs.VpcId
