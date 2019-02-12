@@ -283,7 +283,7 @@ Resources:
         ClusterName: !GetAtt EKSClusterStack.Outputs.ClusterName
         NodeGroupName: !Ref NodeGroupName1
         #Output from VPCStack
-        ClusterControlPlaneSecurityGroup: !GetAtt VPCStack.Outputs.SecurityGroups
+        ClusterControlPlaneSecurityGroup: !GetAtt ClusterSGStack.Outputs.SecurityGroups
         #Output from VPCStack
         VpcId: !GetAtt VPCStack.Outputs.VpcId
         ASGSubnets: !GetAtt VPCStack.Outputs.PrivateSubnetIds
@@ -314,7 +314,7 @@ Resources:
         ClusterName: !GetAtt EKSClusterStack.Outputs.ClusterName
         NodeGroupName: !Ref NodeGroupName2
         #Output from VPCStack
-        ClusterControlPlaneSecurityGroup: !GetAtt VPCStack.Outputs.SecurityGroups
+        ClusterControlPlaneSecurityGroup: !GetAtt ClusterSGStack.Outputs.SecurityGroups
         #Output from VPCStack
         VpcId: !GetAtt VPCStack.Outputs.VpcId
         ASGSubnets: !GetAtt VPCStack.Outputs.PrivateSubnetIds
