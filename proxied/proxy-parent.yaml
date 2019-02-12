@@ -162,6 +162,11 @@ Parameters:
     Description: Maximum size of Node Group ASG.
     Default: 1
 
+  NodeAutoScalingGroupDesiredCapacity1:
+    Type: Number
+    Description: Maximum size of Node Group ASG.
+    Default: 1
+
   NodeVolumeSize1:
     Type: Number
     Description: Node volume size
@@ -199,6 +204,11 @@ Parameters:
     Type: Number
     Description: Maximum size of Node Group ASG.
     Default: 3
+
+  NodeAutoScalingGroupDesiredCapacity2:
+    Type: Number
+    Description: Maximum size of Node Group ASG.
+    Default: 1
 
   NodeVolumeSize2:
     Type: Number
@@ -325,6 +335,7 @@ Resources:
         NodeInstanceType: !Ref NodeInstanceType1
         NodeAutoScalingGroupMinSize: !Ref NodeAutoScalingGroupMinSize1
         NodeAutoScalingGroupMaxSize: !Ref NodeAutoScalingGroupMaxSize1
+        NodeAutoScalingGroupDesiredCapacity: !Ref NodeAutoScalingGroupDesiredCapacity1
         NodeVolumeSize: !Ref NodeVolumeSize1
         BootstrapArguments: !Ref BootstrapArguments1
         #Output from EKSClusterStack
@@ -358,6 +369,7 @@ Resources:
         NodeInstanceType: !Ref NodeInstanceType2
         NodeAutoScalingGroupMinSize: !Ref NodeAutoScalingGroupMinSize2
         NodeAutoScalingGroupMaxSize: !Ref NodeAutoScalingGroupMaxSize2
+        NodeAutoScalingGroupDesiredCapacity: !Ref NodeAutoScalingGroupDesiredCapacity2
         NodeVolumeSize: !Ref NodeVolumeSize2
         BootstrapArguments: !Ref BootstrapArguments2
         #Output from EKSClusterStack
