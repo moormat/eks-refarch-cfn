@@ -242,7 +242,7 @@ Resources:
     Properties:
       Parameters:
         #Output from VPCStack
-        ControlPlaneSecurityGroup:  !GetAtt VPCStack.Outputs.SecurityGroups
+        ClusterControlPlaneSecurityGroup:  !GetAtt VPCStack.Outputs.SecurityGroups
         #Output from VPCStack
         Vpc: !GetAtt VPCStack.Outputs.VpcId
         #Output from EKSClusterStack
