@@ -299,9 +299,9 @@ Resources:
         VpcId: !GetAtt VPCStack.Outputs.VpcId
         ASGSubnets: !GetAtt VPCStack.Outputs.PrivateSubnetIds
         #Output from NodeSecurityGroupStack
-        ExistingNodeSecurityGroup: !GetAtt NodeSecurityGroupStack.Outputs.NodeSecurityGroup
+        NodeSecurityGroup: !GetAtt NodeSecurityGroupStack.Outputs.NodeSecurityGroup
         #Output from NodeInstanceProfileStack
-        ExistingNodeInstanceProfile: !GetAtt NodeInstanceProfileStack.Outputs.NodeInstanceProfile
+        NodeInstanceProfile: !GetAtt NodeInstanceProfileStack.Outputs.NodeInstanceProfile
       TemplateURL:  !Join
         - ''
         - - 'https://'
@@ -331,9 +331,9 @@ Resources:
         VpcId: !GetAtt VPCStack.Outputs.VpcId
         ASGSubnets: !GetAtt VPCStack.Outputs.PrivateSubnetIds
         #Output from NodeSecurityGroupStack
-        ExistingNodeSecurityGroup: !GetAtt NodeSecurityGroupStack.Outputs.NodeSecurityGroup
+        NodeSecurityGroup: !GetAtt NodeSecurityGroupStack.Outputs.NodeSecurityGroup
         #Output from NodeInstanceProfileStack
-        ExistingNodeInstanceProfile: !GetAtt NodeInstanceProfileStack.Outputs.NodeInstanceProfile
+        NodeInstanceProfile: !GetAtt NodeInstanceProfileStack.Outputs.NodeInstanceProfile
       TemplateURL:  !Join
         - ''
         - - 'https://'
