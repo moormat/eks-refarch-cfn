@@ -1,0 +1,18 @@
+Parameters:
+  VpcId:
+    Type: String
+    Description: ID of VPC for EKS Cluster Control Plane Security Group
+
+Resources:
+  ControlPlaneSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Cluster communication with worker nodes
+      VpcId: !Ref VpcId
+
+Outputs:
+  SecurityGroups:
+    Description: Security group for the cluster control plane communication with worker nodes
+    Value: !Join [ ",", [ !Ref ControlPlaneSecurityGroup ] ]
+
+

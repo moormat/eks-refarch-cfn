@@ -1,0 +1,5 @@
+FROM amazonlinux:latest
+RUN yum clean all && yum -y update
+RUN yum -y install squid
+COPY squid.conf /etc/squid/squid.conf
+ENTRYPOINT squid -s -NYd 1

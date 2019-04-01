@@ -1,0 +1,161 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Squid Proxy for traffic from Worker Nodes'
+
+Parameters:
+
+  ProxyImage:
+    Type: String
+    Description: 'Repository URL of Container Image (without tag)'
+  
+  ProxyImageTag:
+    Type: String
+    Default: latest
+    Description: '(Optional) Specify a Tag, default is "latest"'
+
+  ProxyTaskExecutionRoleARN:
+    Type: String
+    Description: Execution Role for Task e.g. arn:aws:iam::<Account ID>:role/ecsTaskExecutionRole
+
+  ECSServiceDesiredTaskCount:
+    Type: Number
+    Default: 2
+    Description: '2+ Tasks for Higher Availability'
+  
+  PublicSubnets:
+    Type: String
+    Description: Public Subnets in which to place web proxy instantiations
+
+  VPCID:
+    Type: String
+    Description: VPC to run Proxy Service in
+
+  NamespaceName:
+    Type: String
+    Description: Namespace of proxy service
+    Default: internal
+
+  RegistryName:
+    Type: String
+    Description: proxy service registry Name
+    Default: squidproxy
+
+  VpcCidr:
+    Type: String
+    Description: CIDR of VPC
+
+  
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Proxy Service Configuration"
+        Parameters:
+          - ProxyImage
+          - ProxyImageTag
+          - ProxyTaskExecutionRoleARN
+          - ECSServiceDesiredTaskCount
+
+
+Resources:
+  ProxyECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Join
+      - '-'
+      - - 'ProxyCluster'
+        - !Ref 'AWS::StackName'
+
+  ProxyTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      NetworkMode: awsvpc
+      Cpu: 1024
+      ExecutionRoleArn: !Ref ProxyTaskExecutionRoleARN
+      Family: !Join
+      - '-'
+      - - 'ProxyTask'
+        - !Ref 'AWS::StackName'
+      Memory: 2048
+      RequiresCompatibilities:
+        - FARGATE
+      ContainerDefinitions:
+        - Name: proxycontainer
+          PortMappings:
+            - ContainerPort: 3128
+          LogConfiguration:
+            LogDriver: awslogs 
+            Options:
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-group:  !Ref CloudWatchLogsGroup
+              awslogs-stream-prefix: proxycontainer
+          Image: !Join
+          - ':'
+          - - !Ref ProxyImage
+            - !Ref ProxyImageTag
+          
+  ProxyECSService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref ProxyECSCluster
+      DesiredCount: !Ref ECSServiceDesiredTaskCount
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !GetAtt ProxySecurityGroup.GroupId
+          Subnets: !Split [ ',', !Ref PublicSubnets ]
+      ServiceName: !Join
+      - '-'
+      - - 'ProxyService'
+        - !Ref 'AWS::StackName'
+      ServiceRegistries:
+        - ContainerName: proxycontainer
+          RegistryArn: !GetAtt ProxyServiceRegistry.Arn
+      TaskDefinition: !Ref ProxyTaskDefinition
+
+  ProxySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPCID
+      GroupDescription: Ingress to web proxy
+      SecurityGroupIngress:
+        - 
+          IpProtocol: "tcp"
+          FromPort: 3128
+          ToPort: 3128
+          CidrIp: !Ref VpcCidr
+
+  ProxyServiceRegistry:
+    Type: "AWS::ServiceDiscovery::Service"
+    Properties:
+      Name: !Ref RegistryName
+      DnsConfig:
+        NamespaceId: !Ref ProxyServiceNamespace
+        DnsRecords:
+          - Type: A
+            TTL: 60
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+
+  ProxyServiceNamespace:
+    Type: "AWS::ServiceDiscovery::PrivateDnsNamespace"
+    Properties:
+      Vpc: !Ref VPCID
+      Name: !Ref NamespaceName
+
+  CloudWatchLogsGroup:
+    Type:  AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join
+      - '-'
+      - - 'proxyservicelogs'
+        - !Ref 'AWS::StackName'
+      RetentionInDays: 14
+
+Outputs:
+  ProxyServiceRegistry:
+    Description: Domain of proxy service to be used by Worker Nodes
+    Value: !Join [ ".", [ !Ref RegistryName, !Ref NamespaceName] ]
