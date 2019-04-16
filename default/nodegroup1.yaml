@@ -191,7 +191,7 @@ Resources:
       MaxSize: !Ref NodeAutoScalingGroupMaxSize
       VPCZoneIdentifier:
         #Each Autoscaling Group is in a single AZ with Node Capacity managed within Cluster by cluster-autoscaler add on
-        !Select [0, !Ref ASGSubnets]
+        [!Select [0, !Ref ASGSubnets]]
       Tags:
       - Key: Name
         Value: !Sub "${ClusterName}-${NodeGroupName}-Node"
