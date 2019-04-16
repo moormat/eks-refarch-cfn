@@ -49,7 +49,18 @@ Metadata:
           - NodeVolumeSize2
           - BootstrapArguments2
           - NodeGroupName2
-
+      - 
+        Label:
+          default: "Worker Node ASG Nested Stack 3"
+        Parameters:
+          - KeyName3
+          - NodeImageId3
+          - NodeInstanceType3
+          - NodeAutoScalingGroupMinSize3
+          - NodeAutoScalingGroupMaxSize3
+          - NodeVolumeSize3
+          - BootstrapArguments3
+          - NodeGroupName3
 
 
 Parameters:
@@ -194,7 +205,50 @@ Parameters:
   NodeGroupName2:
     Description: Unique identifier for the Node Group.
     Type: String
-  
+ 
+# Worker Node AutoScaling Group Nested Stack Parameters 2
+  KeyName3:
+    Description: The EC2 Key Pair to allow SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+
+  NodeImageId3:
+    Type: AWS::EC2::Image::Id
+    Description: AMI id for the node instances.
+
+  NodeInstanceType3:
+    Description: EC2 instance type for the node instances
+    Type: String
+    Default: t2.small
+
+  NodeAutoScalingGroupMinSize3:
+    Type: Number
+    Description: Minimum size of Node Group ASG.
+    Default: 1
+
+  NodeAutoScalingGroupMaxSize3:
+    Type: Number
+    Description: Maximum size of Node Group ASG.
+    Default: 3
+
+  NodeAutoScalingGroupDesiredCapacity3:
+    Type: Number
+    Description: Maximum size of Node Group ASG.
+    Default: 1
+
+  NodeVolumeSize3:
+    Type: Number
+    Description: Node volume size
+    Default: 20
+
+  BootstrapArguments3:
+    Description: Arguments to pass to the bootstrap script. See files/bootstrap.sh in https://github.com/awslabs/amazon-eks-ami
+    Default: ""
+    Type: String
+
+  NodeGroupName3:
+    Description: Unique identifier for the Node Group.
+    Type: String
+
 
 Resources:
   VPCStack:
@@ -341,7 +395,37 @@ Resources:
           - '.s3.amazonaws.com/nodegroup2.yaml'
       TimeoutInMinutes: 30
 
-
+  NodeASGStack3:
+    DependsOn: NodeSecurityGroupStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters: 
+        KeyName: !Ref KeyName3
+        NodeImageId: !Ref NodeImageId3
+        NodeInstanceType: !Ref NodeInstanceType3
+        NodeAutoScalingGroupMinSize: !Ref NodeAutoScalingGroupMinSize3
+        NodeAutoScalingGroupMaxSize: !Ref NodeAutoScalingGroupMaxSize3
+        NodeAutoScalingGroupDesiredCapacity: !Ref NodeAutoScalingGroupDesiredCapacity3
+        NodeVolumeSize: !Ref NodeVolumeSize3
+        BootstrapArguments: !Ref BootstrapArguments3
+        #Output from EKSClusterStack
+        ClusterName: !GetAtt EKSClusterStack.Outputs.ClusterName
+        NodeGroupName: !Ref NodeGroupName3
+        #Output from VPCStack
+        ClusterControlPlaneSecurityGroup: !GetAtt ClusterSGStack.Outputs.SecurityGroups
+        #Output from VPCStack
+        VpcId: !GetAtt VPCStack.Outputs.VpcId
+        ASGSubnets: !GetAtt VPCStack.Outputs.PrivateSubnetIds
+        #Output from NodeSecurityGroupStack
+        NodeSecurityGroup: !GetAtt NodeSecurityGroupStack.Outputs.NodeSecurityGroup
+        #Output from NodeInstanceProfileStack
+        NodeInstanceProfile: !GetAtt NodeInstanceProfileStack.Outputs.NodeInstanceProfile
+      TemplateURL:  !Join
+        - ''
+        - - 'https://'
+          - !Ref S3BucketName
+          - '.s3.amazonaws.com/nodegroup3.yaml'
+      TimeoutInMinutes: 30
 
 
 
