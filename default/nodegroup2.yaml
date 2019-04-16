@@ -241,7 +241,7 @@ Resources:
 
             /etc/eks/bootstrap.sh ${ClusterName} ${BootstrapArguments}
 
-            KUBECONFIG=/var/lib/kubeconfig kubectl annotate node $(hostname) k8s.amazonaws.com/eniConfig=eniconfigcustom2
+            KUBECONFIG=/var/lib/kubelet/kubeconfig kubectl annotate node $(hostname) k8s.amazonaws.com/eniConfig=eniconfigcustom2
            
             /opt/aws/bin/cfn-signal --exit-code $? \
                      --stack  ${AWS::StackName} \
