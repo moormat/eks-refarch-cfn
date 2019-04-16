@@ -240,9 +240,6 @@ Resources:
             systemctl start amazon-ssm-agent
 
             /etc/eks/bootstrap.sh ${ClusterName} ${BootstrapArguments}
-
-            KUBECONFIG=/var/lib/kubelet/kubeconfig kubectl annotate node $(hostname) k8s.amazonaws.com/eniConfig=eniconfigcustom1
-
             /opt/aws/bin/cfn-signal --exit-code $? \
                      --stack  ${AWS::StackName} \
                      --resource NodeGroup  \
