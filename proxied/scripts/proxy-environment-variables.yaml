@@ -8,5 +8,5 @@ data:
   https_proxy: http://squidproxy.internal:3128
   HTTP_PROXY: http://squidproxy.internal:3128
   http_proxy: http://squidproxy.internal:3128
-  NO_PROXY: 10.100.0.0/16,localhost,127.0.0.1,172.28.0.0/16,169.254.169.254,.internal
-  no_proxy: 10.100.0.0/16,localhost,127.0.0.1,172.28.0.0/16,169.254.169.254,.internal
+  NO_PROXY: 10.100.0.0/16,localhost,127.0.0.1,192.168.0.0/16,169.254.169.254,.internal
+  no_proxy: 10.100.0.0/16,localhost,127.0.0.1,192.168.0.0/16,169.254.169.254,.internal
