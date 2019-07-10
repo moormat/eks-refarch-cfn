@@ -41,13 +41,10 @@ helm repo add incubator http://storage.googleapis.com/kubernetes-charts-incubato
 helm install incubator/aws-alb-ingress-controller --name alb-ingress-controller --set autoDiscoverAwsRegion=true --set autoDiscoverAwsVpcID=true --set clusterName=$CLUSTERNAME
 
 # cluster autoscaler
-helm install stable/cluster-autoscaler --name cluster-autoscaler --set cloudProvider=aws --set autoDiscovery.clusterName=$CLUSTERNAME --set awsRegion=us-west-2 --set sslCertHostPath='/etc/eksctl/ca.crt' --set rbac.create=true --set rbac.pspEnabled=true
- 
+helm install stable/cluster-autoscaler --name cluster-autoscaler --set cloudProvider=aws --set autoDiscovery.clusterName=$CLUSTERNAME --set awsRegion=us-west-2 --set sslCertHostPath='/etc/kubernetes/pki/ca.crt' --set rbac.create=true --set rbac.pspEnabled=true
+
 # prometheus operator
 helm install stable/prometheus-operator --name prometheus-operator
 
 # metrics server
 helm install stable/metrics-server --name metrics-server --set rbac.create=true --set rbac.pspEnabled=True --set args[0]='--kubelet-preferred-address-types=InternalIP'
-
-
-

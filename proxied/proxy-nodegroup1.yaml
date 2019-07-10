@@ -292,7 +292,14 @@ Resources:
             # Install SSM Agent
             yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
             systemctl enable amazon-ssm-agent
-            systemctl start amazon-ssm-agent
+            systemctl restart amazon-ssm-agent
+
+            # install kubectl (optional)
+            mkdir -p /root/bin
+            curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+            chmod +x ./kubectl
+            mv ./kubectl /root/bin/kubectl
+            echo export KUBECONFIG=/var/lib/kubelet/kubeconfig >> /root/.bash_profile
 
             # Set the proxy variables before running the bootstrap.sh script
             set -a
